@@ -1,5 +1,10 @@
 USE master;
 GO
+
+-------------------------------------------------------------------------------
+--- Create a source database
+-------------------------------------------------------------------------------
+
 IF (DB_ID('Partitioning Zero to Hero_source') IS NOT NULL)
     DROP DATABASE [Partitioning Zero to Hero_source];
 GO
@@ -19,6 +24,11 @@ GO
 ALTER DATABASE CURRENT SET RECOVERY SIMPLE WITH NO_WAIT
 GO
 
+
+
+-------------------------------------------------------------------------------
+--- Create a partition function and schema
+
 CREATE PARTITION FUNCTION [AnnualFunction](date)
 AS RANGE RIGHT
 FOR VALUES ('2018-01-01', '2019-01-01', '2020-01-01', '2021-01-01', '2022-01-01', '2023-01-01');
@@ -29,6 +39,8 @@ ALL TO ([PRIMARY]);
 
 
 
+-------------------------------------------------------------------------------
+--- Create a demo table with some data:
 
 CREATE TABLE dbo.AccountTransactions (
     TransactionDate         date NOT NULL,
@@ -57,6 +69,14 @@ FROM (
 WHERE TransactionDate BETWEEN '2018-01-01' AND SYSDATETIME();
 
 GO
+
+
+-------------------------------------------------------------------------------
+--- Create the demo database
+-------------------------------------------------------------------------------
+
+
+
 IF (DB_ID('Partitioning Zero to Hero') IS NOT NULL)
     DROP DATABASE [Partitioning Zero to Hero];
 GO
@@ -72,8 +92,6 @@ CREATE DATABASE [Partitioning Zero to Hero]
 GO
 USE [Partitioning Zero to Hero];
 GO
---ALTER DATABASE CURRENT SET RECOVERY SIMPLE WITH NO_WAIT
-GO
 
 ALTER DATABASE CURRENT ADD FILEGROUP [Some_filegroup];
 
@@ -83,7 +101,10 @@ ALTER DATABASE CURRENT ADD FILE (
         FILENAME='D:\Stuff\Some_file.ndf'
     ) TO FILEGROUP [Some_filegroup];
 
---DROP TABLE dbo.AccountTransactions_unpartitioned;
+
+-------------------------------------------------------------------------------
+--- Create a demo table with some data:
+
 
 CREATE TABLE dbo.AccountTransactions_unpartitioned (
     TransactionDateYear AS YEAR(TransactionDate) PERSISTED NOT NULL,
@@ -100,6 +121,8 @@ SELECT TransactionDate, AccountID, TransactionID, Amount
 FROM [Partitioning Zero to Hero_source].dbo.AccountTransactions;
 
 
+-------------------------------------------------------------------------------
+--- Same table and data, but unpartitioned:
 
 
 CREATE TABLE dbo.AccountTransactions_plain (
@@ -119,6 +142,14 @@ FROM [Partitioning Zero to Hero_source].dbo.AccountTransactions;
 
 
 GO
+
+
+-------------------------------------------------------------------------------
+--- sp_show_partitions utility function:
+-------------------------------------------------------------------------------
+
+
+
 CREATE OR ALTER PROCEDURE dbo.sp_show_partitions
     @partition_scheme_name  sysname,
     @table sysname
@@ -181,6 +212,14 @@ AS
     ORDER BY ranges.partition_number;
 
 GO
+
+
+-------------------------------------------------------------------------------
+--- sp_truncate_partitions utility function:
+-------------------------------------------------------------------------------
+
+
+
 CREATE OR ALTER PROCEDURE dbo.sp_truncate_partitions
     @data_space_id              int,
     @first_boundary             sql_variant,
@@ -225,6 +264,13 @@ IF (@sql IS NOT NULL)
     EXECUTE sys.sp_executesql @sql;
 
 GO
+
+
+-------------------------------------------------------------------------------
+--- sp_partitions utility function:
+-------------------------------------------------------------------------------
+
+
 
 CREATE OR ALTER PROCEDURE dbo.sp_partitions
     @pf_name                    sysname,

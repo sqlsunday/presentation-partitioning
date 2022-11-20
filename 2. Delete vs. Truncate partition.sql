@@ -1,23 +1,37 @@
 USE [Partitioning Zero to Hero];
+SET STATISTICS TIME, IO ON;
 GO
 
 
 
 
 
-SET STATISTICS TIME, IO ON;
+-------------------------------------------------
+--- Plain delete from unpartioned table
+-------------------------------------------------
 
+--- 0:09
 DELETE FROM dbo.AccountTransactions_unpartitioned
-WHERE YEAR(TransactionDate)=2020;
+WHERE TransactionDate>='2020-01-01' AND TransactionDate<'2021-01-01';
+--WHERE YEAR(TransactionDate)=2020;
 
 
 
 
+
+
+
+-------------------------------------------------
+--- Truncating the equivalent partition in the
+--- partitioned table
+-------------------------------------------------
 
 --- Look at the partitioned table:
 EXECUTE dbo.sp_show_partitions
     @partition_scheme_name='Annual',
     @table='dbo.AccountTransactions';
+
+
 
 BEGIN TRANSACTION;
 
@@ -27,4 +41,12 @@ BEGIN TRANSACTION;
 ROLLBACK TRANSACTION;
 
 
-USE master;
+
+
+
+
+-------------------------------------------------
+--- Switch to another database, so we don't break
+--- the upcoming RESTORE demo.
+
+USE tempdb;

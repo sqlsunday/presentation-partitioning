@@ -3,6 +3,12 @@ GO
 
 
 
+-------------------------------------------------
+--- Switching out a partition to a regular table
+-------------------------------------------------
+
+
+
 --- Create a staging/switching table:
 CREATE TABLE dbo.AccountTransactions_2022 (
     TransactionDate         date NOT NULL,
@@ -10,7 +16,9 @@ CREATE TABLE dbo.AccountTransactions_2022 (
     TransactionID           bigint NOT NULL,
     Amount                  numeric(18, 2) NOT NULL,
     Filler                  binary(250) NOT NULL DEFAULT (0x00),
-    CONSTRAINT PK_AccountTransactions_2022 PRIMARY KEY CLUSTERED (AccountID, TransactionDate, TransactionID) ON [Filegroup_2022]
+    CONSTRAINT PK_AccountTransactions_2022
+		PRIMARY KEY CLUSTERED (AccountID, TransactionDate, TransactionID)
+		ON [Filegroup_2022]
 );
 
 
@@ -37,7 +45,14 @@ EXECUTE dbo.sp_show_partitions
 
 
 
---- Switch the staging table back into the partitioned table:
+-------------------------------------------------
+--- Switch the regular table back into the
+--- partition:
+-------------------------------------------------
+
+
+
+
 ALTER TABLE dbo.AccountTransactions_2022
 SWITCH TO dbo.AccountTransactions PARTITION 6;
 
@@ -66,16 +81,28 @@ EXECUTE dbo.sp_show_partitions
 
 
 
+-------------------------------------------------
+--- Switching a partition from one partitioned
+--- table to another partitioned table
+---
+--- Example: let's say we want to compress an
+---          old partition.
+-------------------------------------------------
 
 
---- Create a staging/switching table, but this time with partitions:
+
+
+
+--- Create a staging/switching table, but with partitions:
 CREATE TABLE dbo.AccountTransactions_switch_with_partitions (
     TransactionDate         date NOT NULL,
     AccountID               bigint NOT NULL,
     TransactionID           bigint NOT NULL,
     Amount                  numeric(18, 2) NOT NULL,
     Filler                  binary(250) NOT NULL DEFAULT (0x00),
-    CONSTRAINT PK_AccountTransactions_part PRIMARY KEY CLUSTERED (AccountID, TransactionDate, TransactionID) ON Annual(TransactionDate)
+    CONSTRAINT PK_AccountTransactions_part
+		PRIMARY KEY CLUSTERED (AccountID, TransactionDate, TransactionID)
+		ON Annual(TransactionDate)
 );
 
 
@@ -120,4 +147,10 @@ EXECUTE dbo.sp_show_partitions
     @table='dbo.AccountTransactions';
 
 
-USE master;
+
+
+-------------------------------------------------
+--- Switch to another database, so we don't break
+--- the upcoming RESTORE demo.
+
+USE tempdb;

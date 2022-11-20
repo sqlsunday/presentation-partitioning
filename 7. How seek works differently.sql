@@ -1,8 +1,13 @@
 USE [Partitioning Zero to Hero];
-
 SET STATISTICS TIME, IO ON;
 
 
+
+
+
+-------------------------------------------------
+--- On an unpartitioned table
+-------------------------------------------------
 
 
 SELECT AccountID, SUM(Amount) AS Net_balance_change
@@ -15,6 +20,12 @@ OPTION (MAXDOP 1);
 
 
 
+
+
+
+-------------------------------------------------
+--- On the partitioned table
+-------------------------------------------------
 
 SELECT AccountID, SUM(Amount) AS Net_balance_change
 FROM dbo.AccountTransactions

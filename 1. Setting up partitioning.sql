@@ -3,7 +3,9 @@ GO
 
 
 
+-------------------------------------------------
 --- Create the filegroups:
+-------------------------------------------------
 
 ALTER DATABASE CURRENT ADD FILEGROUP [Filegroup_START];
 ALTER DATABASE CURRENT ADD FILEGROUP [Filegroup_2018];
@@ -15,7 +17,13 @@ ALTER DATABASE CURRENT ADD FILEGROUP [Filegroup_2023];
 
 
 
+
+
+
+
+-------------------------------------------------
 --- Add files to the filegroups:
+-------------------------------------------------
 
 ALTER DATABASE CURRENT ADD FILE (
         NAME='File_START.ndf',
@@ -63,7 +71,12 @@ ALTER DATABASE CURRENT ADD FILE (
 
 
 
+-------------------------------------------------
 --- Create the partition function:
+-------------------------------------------------
+
+
+
 
 CREATE PARTITION FUNCTION [AnnualFunction](date)
 AS RANGE RIGHT
@@ -71,7 +84,11 @@ FOR VALUES ('2018-01-01', '2019-01-01', '2020-01-01', '2021-01-01', '2022-01-01'
 
 
 
+-------------------------------------------------
 --- Create the partition scheme:
+-------------------------------------------------
+
+
 
 CREATE PARTITION SCHEME [Annual]
 AS PARTITION [AnnualFunction]
@@ -82,7 +99,11 @@ TO ([Filegroup_START], [Filegroup_2018], [Filegroup_2019], [Filegroup_2020], [Fi
 
 
 
+-------------------------------------------------
 --- Create the table:
+-------------------------------------------------
+
+
 
 CREATE TABLE dbo.AccountTransactions (
     TransactionDate         date NOT NULL,
@@ -90,13 +111,19 @@ CREATE TABLE dbo.AccountTransactions (
     TransactionID           bigint NOT NULL,
     Amount                  numeric(18, 2) NOT NULL,
     Filler                  binary(250) NOT NULL DEFAULT (0x00),
-    CONSTRAINT PK_AccountTransactions PRIMARY KEY CLUSTERED (AccountID, TransactionDate, TransactionID) ON Annual(TransactionDate)
+    CONSTRAINT PK_AccountTransactions
+		PRIMARY KEY CLUSTERED (AccountID, TransactionDate, TransactionID)
+		ON Annual(TransactionDate)
 );
 
 
 
 
+-------------------------------------------------
 --- And load some data:
+-------------------------------------------------
+
+
 --- 0:35
 INSERT INTO dbo.AccountTransactions (TransactionDate, AccountID, TransactionID, Amount)
 SELECT TransactionDate, AccountID, TransactionID, Amount
@@ -115,5 +142,8 @@ EXECUTE dbo.sp_show_partitions
 
 
 
+-------------------------------------------------
+--- Switch to another database, so we don't break
+--- the upcoming RESTORE demo.
 
-USE master;
+USE tempdb;

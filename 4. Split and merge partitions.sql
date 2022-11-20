@@ -3,6 +3,14 @@ GO
 
 
 
+-------------------------------------------------
+--- Add a file and split a partition
+-------------------------------------------------
+
+
+
+
+
 --- Inspect the partitions:
 EXECUTE dbo.sp_show_partitions
     @partition_scheme_name='Annual',
@@ -29,7 +37,16 @@ ALTER PARTITION SCHEME [Annual] NEXT USED [Filegroup_2024];
 
 
 
---- Split the last partition by adding a new boundary at 2024-01-01:
+
+--- Inspect the partitions:
+--- We want to split the last partition by inserting a new boundary.
+EXECUTE dbo.sp_show_partitions
+    @partition_scheme_name='Annual',
+    @table='dbo.AccountTransactions';
+
+
+
+--- ... at 2024-01-01:
 ALTER PARTITION FUNCTION AnnualFunction() SPLIT RANGE ('2024-01-01');
 
 
@@ -39,6 +56,17 @@ ALTER PARTITION FUNCTION AnnualFunction() SPLIT RANGE ('2024-01-01');
 EXECUTE dbo.sp_show_partitions
     @partition_scheme_name='Annual',
     @table='dbo.AccountTransactions';
+
+
+
+
+-------------------------------------------------
+--- Merge the first partition and delete the file
+-------------------------------------------------
+
+
+
+
 
 
 
@@ -71,4 +99,12 @@ EXECUTE dbo.sp_show_partitions
     @table='dbo.AccountTransactions';
 
 
-USE master;
+
+
+
+
+-------------------------------------------------
+--- Switch to another database, so we don't break
+--- the upcoming RESTORE demo.
+
+USE tempdb;

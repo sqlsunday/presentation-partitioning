@@ -1,7 +1,16 @@
 USE [Partitioning Zero to Hero];
 
 
-SELECT * FROM sys.filegroups
+SELECT [name], is_default, is_read_only
+FROM sys.filegroups
+ORDER BY data_space_id;
+
+
+
+-------------------------------------------------
+--- Create backups of our filegroups:
+-------------------------------------------------
+
 
 
 
@@ -39,7 +48,7 @@ WHERE TransactionDate BETWEEN '2021-02-01' AND '2021-02-28';
 
 
 
---- Take a full backup of the filegroups:
+--- Take a full backup of the remaining (read-write) filegroups:
 --- 0:14
 BACKUP DATABASE [Partitioning Zero to Hero]
     FILEGROUP='PRIMARY',
@@ -58,7 +67,9 @@ BACKUP DATABASE [Partitioning Zero to Hero]
 
 
 
--------------------------------------------------------------------------------
+-------------------------------------------------
+--- Restore filegroups (piecemeal):
+-------------------------------------------------
 
 
 
@@ -83,7 +94,8 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
 
 --- View the state of the files:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
@@ -104,7 +116,8 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
 
 --- View the state of the files:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
@@ -150,7 +163,8 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
 
 --- View the state of the files:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
@@ -172,10 +186,15 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
 
 --- Verify that we have everything:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
 
 
-USE master;
+-------------------------------------------------
+--- Switch to another database, so we don't break
+--- the upcoming RESTORE demo.
+
+USE tempdb;

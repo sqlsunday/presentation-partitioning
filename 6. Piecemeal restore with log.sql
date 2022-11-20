@@ -4,11 +4,6 @@ USE [Partitioning Zero to Hero];
 
 
 
-
-
-
-
-
 --- Make some changes in the "current" filegroup:
 UPDATE TOP (1000) dbo.AccountTransactions
 SET Filler=0x0123
@@ -25,7 +20,9 @@ BACKUP LOG [Partitioning Zero to Hero]
 
 
 
--------------------------------------------------------------------------------
+-------------------------------------------------
+--- Create backups of our filegroups:
+-------------------------------------------------
 
 
 
@@ -39,8 +36,8 @@ DROP DATABASE IF EXISTS [Partitioning Zero to Hero_restored];
 RESTORE DATABASE [Partitioning Zero to Hero_restored]
     FILEGROUP='PRIMARY'
     FROM DISK = N'D:\Stuff\Full_filegroups.bak'
-    WITH PARTIAL,
-         NORECOVERY,
+    WITH PARTIAL,		-- because we're doing piecemeal restore
+         NORECOVERY,	-- allow for additional log restores
          FILE = 1,
          MOVE N'Partitioning Zero to Hero' TO N'D:\Stuff\Restored_PRIMARY.mdf',
          MOVE N'Partitioning Zero to Hero_log' TO N'D:\Stuff\Restored_log.ldf',
@@ -50,7 +47,8 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
 
 --- View the state of the files:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
@@ -71,7 +69,8 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
 
 --- View the state of the files:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
@@ -93,7 +92,8 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
 
 --- View the state of the files:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
@@ -134,7 +134,8 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
 
 --- Verify that we have everything:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
@@ -146,16 +147,18 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
          FILE = 1;
 
 
---- Verify that we have everything:
+--- Inspect the results:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
 
 
 
---- ... and the read-only files from the old backup - WITH RECOVERY because they're read-only and have not changed:
+--- ... and the read-only files from the old backup
+--- WITH RECOVERY because they're read-only and have not changed:
 RESTORE DATABASE [Partitioning Zero to Hero_restored]
     FILEGROUP='Filegroup_START',
     FILEGROUP='Filegroup_2019',
@@ -174,11 +177,13 @@ RESTORE DATABASE [Partitioning Zero to Hero_restored]
 
 --- Verify that we have everything:
 SELECT [name], [type_desc], [state_desc]
-FROM sys.master_files WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
+FROM sys.master_files
+WHERE [database_id]=DB_ID('Partitioning Zero to Hero_restored')
 ORDER BY [name];
 
 
 
 
-USE master;
+-------------------------------------------------
 
+USE tempdb;
