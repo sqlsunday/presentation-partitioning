@@ -1,4 +1,7 @@
+ALTER DATABASE [Partitioning Zero to Hero] SET RECOVERY FULL;
+GO
 USE [Partitioning Zero to Hero];
+GO
 
 
 
